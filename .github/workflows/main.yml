@@ -1,7 +1,7 @@
 name: 完美校园低电费提醒
 on:
   # schedule:
-  #   - cron: "0/30 7-23 * * *"  # 每 30 分钟运行一次，时间为 07:00 至 23:59
+  #   - cron: "0/30 15-7 * * *"  # 世界协调时，相当于北京时间的每 30 分钟运行一次，运行时间为 7:00 至 23:59
   workflow_dispatch:
 
 env:
@@ -9,7 +9,7 @@ env:
   SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
   STUDENT_ID: ${{ secrets.STUDENT_ID }}
   ALERT_QQ: ${{ secrets.ALERT_QQ }}
-  ALERT_THRESHOLD: ${{ repository.ALERT_THRESHOLD}}
+  ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD}}
 
 jobs:
   main:
