@@ -53,6 +53,6 @@ do
         echo "发送失败：$res"
         sleep 3
     fi
-    # sleep 3
     let i++
 done
+echo    #不知道为什么不加这一行，Action 会报 Error: Process completed with exit code 1.
