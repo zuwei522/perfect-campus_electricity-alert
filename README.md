@@ -1,4 +1,4 @@
-# 完美校园 低电费提醒🔔
+# 完美校园 低电费提醒🔔 [![完美校园低电费提醒](https://github.com/zuwei522/perfect-campus_electricity-alert/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/zuwei522/perfect-campus_electricity-alert/actions/workflows/main.yml)
 
 你是否曾经因为忘记检查电费，而遭遇晚上断电，还恰好处于充值系统的维护时间？ /(ㄒoㄒ)/~~  
 于是，为了避免悲剧再次发生，这个**使用 Github Action** 定时执行、借助 [Qmsg 酱](https://qmsg.zendee.cn/)发送低电费提醒的 **shell 脚本**就诞生了！ （好耶ヽ(✿ﾟ▽ﾟ)ノ
