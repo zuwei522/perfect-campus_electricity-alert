@@ -9,7 +9,7 @@ env:
   SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
   STUDENT_ID: ${{ secrets.STUDENT_ID }}
   ALERT_QQ: ${{ secrets.ALERT_QQ }}
-  ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD}}
+  ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
 
 jobs:
   main:
@@ -19,7 +19,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Installation dependencies
-        run: apt install curl jq
+        run:
+          sudo apt-get update -y  
+          sudo apt-get install -y curl jq
 
       - name: Set up environment variables
         run: $GITHUB_ENV
