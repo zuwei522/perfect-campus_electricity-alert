@@ -4,13 +4,6 @@ on:
   #   - cron: "0/30 15-7 * * *"  # 世界协调时，相当于北京时间的每 30 分钟运行一次，运行时间为 7:00 至 23:59
   workflow_dispatch:
 
-env:
-  QMSG_KEY: ${{ secrets.QMSG_KEY }}
-  SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
-  STUDENT_ID: ${{ secrets.STUDENT_ID }}
-  ALERT_QQ: ${{ secrets.ALERT_QQ }}
-  ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -23,8 +16,11 @@ jobs:
           sudo apt-get update -y  
           sudo apt-get install -y curl jq
 
-      - name: Set up environment variables
-        run: $GITHUB_ENV
-        
       - name: Run main.sh
         run: ./main.sh
+        env:
+          QMSG_KEY: ${{ secrets.QMSG_KEY }}
+          SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
+          STUDENT_ID: ${{ secrets.STUDENT_ID }}
+          ALERT_QQ: ${{ secrets.ALERT_QQ }}
+          ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
