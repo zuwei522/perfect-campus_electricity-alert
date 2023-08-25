@@ -1,0 +1,28 @@
+name: 完美校园低电费提醒
+on:
+  # schedule:
+  #   - cron: "0/30 7-23 * * *"  # 每 30 分钟运行一次，时间为 07:00 至 23:59
+  workflow_dispatch:
+
+env:
+  QMSG_KEY: ${{ secrets.QMSG_KEY }}
+  SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
+  STUDENT_ID: ${{ secrets.STUDENT_ID }}
+  ALERT_QQ: ${{ secrets.ALERT_QQ }}
+  ALERT_THRESHOLD: ${{ repository.ALERT_THRESHOLD}}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Installation dependencies
+        run: apt install curl jq
+
+      - name: Set up environment variables
+        run: $GITHUB_ENV
+        
+      - name: Run main.sh
+        run: ./main.sh
