@@ -34,7 +34,7 @@ do
 done
 
 #输出日志
-echo -e "[`date "+%Y-%m-%d %A %H:%M:%S"`] 学号${STUDENT_ID:0:2}*****${STUDENT_ID:7:5}共绑定了$roomAmount个房间\n房间\t\t\t已使用\t剩余\t状态"
+echo -e "[`date "+%Y-%m-%d %A %H:%M:%S"`] 学号${STUDENT_ID:0:4}****** 共绑定了$roomAmount个房间\n房间\t\t\t已使用\t剩余\t状态"
 for((i=0;i<$roomAmount;i++))
 do
     echo -e "${roomName[$i]}\t${roomUse[$i]}\t${roomOdd[$i]}\t${roomStatus[$i]}"
@@ -44,7 +44,7 @@ QmsgFlag=false  #是否推送成功标记
 i=0
 while [ $msgFlag -eq 1 ] && [ "$QmsgFlag" != "true" ] && [ $i -lt 3 ]   #若第一次推送失败，只重试 2 次
 do
-    echo $(echo "向与学号 ${STUDENT_ID:0:2}*****${STUDENT_ID:10:2} 绑定的QQ号 ${ALERT_QQ:0:3}******** 发送消息：$msg")
+    echo $(echo "向与学号 ${STUDENT_ID:0:4}****** 绑定的QQ号 ${ALERT_QQ:0:3}******** 发送消息：$msg")
     res=$(curl -sd "qq=${ALERT_QQ}&msg=$msg" "https://qmsg.zendee.cn:443/send/${QMSG_KEY}")
     QmsgFlag=$(echo $res | jq .success)
     if [ "$QmsgFlag" == "true" ];then   #输出是否推送成功日志
