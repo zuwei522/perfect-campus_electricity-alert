@@ -16,7 +16,7 @@
       | Name       | Secret |
       | ---------- | ------ |
       | QMSG_KEY   | [点我登录 Qmsg 酱控制台](https://qmsg.zendee.cn/user)，找到并填入「我的KEY」。选择并主动添加可用的 Qmsg 酱的QQ好友，即可接收到 bot 的消息推送。|
-      | ALERT_QQ   | 填入你的 QQ 号 |
+      | ALERT_QQ   | 填入你的 QQ 号或群号 |
       | SCHOOL_ID  | 填入你所在学校的编码👉 [点我查看学校编码](./school-list.md) |
       | STUDENT_ID | 填入你的学号 |
 
@@ -25,8 +25,9 @@
       | Name            | Value |
       | --------------- | ----- |
       | ALERT_THRESHOLD | 填入你想要设置的提醒阈值，单位是度，例如：15 |
+      | IS_GROUP        | 上面的`ALERT_QQ`是否为群聊，是填`1`，不是填`0` |
 
-  5. 回到仓库主页，依次进入👉 `Actions` → `完美校园低电费提醒`，点击右侧 `Run workflow` 可手动立即运行一次。若暂时不需要提醒，可在该页面的 `Filter workflow runs` 搜索框右边的 `···` 按钮中选择 `Disable workflow`，暂时禁用这个 workflow
+  6. 回到仓库主页，依次进入👉 `Actions` → `完美校园低电费提醒`，点击右侧 `Run workflow` 可手动立即运行一次。若暂时不需要提醒，可在该页面的 `Filter workflow runs` 搜索框右边的 `···` 按钮中选择 `Disable workflow`，暂时禁用这个 workflow
 
 ## 注意事项
 
