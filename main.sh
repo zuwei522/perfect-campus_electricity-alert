@@ -65,5 +65,8 @@ do
         sleep 3
     fi
     let i++
+    if [ $i -eq 3 ];then
+        exit 1
+    fi
 done
 exit 0
