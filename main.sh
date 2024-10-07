@@ -11,37 +11,33 @@ body=$(curl -sd "param=%7B%22cmd%22%3A%22getbindroom%22%2C%22account%22%3A%22${S
 body=$(echo $(echo $(echo $body | sed 's/"{/{/g') | sed 's/}"/}/g') | sed 's/\\"/"/g')  # 手动整理 json 格式
 roomAmount=$(echo $body | jq '.roomlist|length')    # 获取绑定的房间数量
 
-singleRoom=false
 # 判断是否只绑定一个宿舍
+singleRoom=false
 if [[ roomAmount -eq 0 ]]; then
     roomAmount=1
     singleRoom=true
 fi
 
-# 直接重复操作了，不打算重写
-for((i=0;i<$roomAmount;i++))    # 依次提取 json 中的数据
+# 依次提取 json 中的数据
+for((i=0;i<$roomAmount;i++))    
 do
     if [ "$singleRoom" == "true" ];then   # 处理没有roomlist的情况
         roomName[$i]=$(echo $(echo $body | jq .roomfullname) | sed 's/"//g')   # 房间名
     	roomUse[$i]=$(echo $(echo $body | jq .detaillist[0].use) | sed 's/"//g')   # 已使用电量
     	roomOdd[$i]=$(echo $(echo $body | jq .detaillist[0].odd) | sed 's/"//g')   # 剩余电量
     	roomStatusCode[$i]=$(echo $(echo $body | jq .detaillist[0].status) | sed 's/"//g') # 状态码
-    	if [ ${roomStatusCode[$i]} -eq 1 ];then # 将状态码转换为字符
-            roomStatus[$i]="一般送电"
-    	else
-            roomStatus[$i]="一般断电"
-    	fi
     else
     	roomName[$i]=$(echo $(echo $body | jq .roomlist[$i].roomfullname) | sed 's/"//g')
     	roomUse[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].use) | sed 's/"//g')
     	roomOdd[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].odd) | sed 's/"//g')
     	roomStatusCode[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].status) | sed 's/"//g')
-    	if [ ${roomStatusCode[$i]} -eq 1 ];then
+    fi
+	# 将状态码转换为字符
+	if [ ${roomStatusCode[$i]} -eq 1 ];then
             roomStatus[$i]="一般送电"
     	else
             roomStatus[$i]="一般断电"
-    	fi
-    fi
+	fi
 done
 
 msg="[电费不足提醒]目前与您的学号 ${STUDENT_ID:0:4}****** 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
