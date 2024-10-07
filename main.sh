@@ -5,37 +5,49 @@
 # ALERT_QQ=         # 要推送的 QQ
 # QMSG_KEY=         # Qmsg 酱推送Key 获取方法：https://qmsg.zendee.cn/user 登录Qmsg控制台即可获取我的KEY，选择并添加可用的Qmsg酱的QQ好友，即可接收到消息推送
 # ALERT_THRESHOLD=  # 低电量提醒阈值
-# IS_GROUP=         # 推送qq为群聊-1    非群聊-0
 
 body=$(curl -sd "param=%7B%22cmd%22%3A%22getbindroom%22%2C%22account%22%3A%22${STUDENT_ID}%22%7D&customercode=${SCHOOL_ID}&method=getbindroom" "https://xqh5.17wanxiao.com/smartWaterAndElectricityService/SWAEServlet" | jq .body) # 从完美校园获取信息
+
 body=$(echo $(echo $(echo $body | sed 's/"{/{/g') | sed 's/}"/}/g') | sed 's/\\"/"/g')  # 手动整理 json 格式
 roomAmount=$(echo $body | jq '.roomlist|length')    # 获取绑定的房间数量
 
-for((i=0;i<$roomAmount;i++))    # 依次提取 json 中的数据
+# 判断是否只绑定一个宿舍
+singleRoom=false
+if [[ roomAmount -eq 0 ]]; then
+    roomAmount=1
+    singleRoom=true
+fi
+
+# 依次提取 json 中的数据
+for((i=0;i<$roomAmount;i++))    
 do
-    roomName[$i]=$(echo $(echo $body | jq .roomlist[$i].roomfullname) | sed 's/"//g')   # 房间名
-    roomUse[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].use) | sed 's/"//g')   # 已使用电量
-    roomOdd[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].odd) | sed 's/"//g')   # 剩余电量
-    roomStatusCode[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].status) | sed 's/"//g') # 状态码
-    if [ ${roomStatusCode[$i]} -eq 1 ];then # 将状态码转换为字符
-        roomStatus[$i]="一般送电"
+    if [ "$singleRoom" == "true" ];then   # 处理没有roomlist的情况
+        roomName[$i]=$(echo $(echo $body | jq .roomfullname) | sed 's/"//g')   # 房间名
+    	roomUse[$i]=$(echo $(echo $body | jq .detaillist[0].use) | sed 's/"//g')   # 已使用电量
+    	roomOdd[$i]=$(echo $(echo $body | jq .detaillist[0].odd) | sed 's/"//g')   # 剩余电量
+    	roomStatusCode[$i]=$(echo $(echo $body | jq .detaillist[0].status) | sed 's/"//g') # 状态码
     else
-        roomStatus[$i]="一般断电"
+    	roomName[$i]=$(echo $(echo $body | jq .roomlist[$i].roomfullname) | sed 's/"//g')
+    	roomUse[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].use) | sed 's/"//g')
+    	roomOdd[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].odd) | sed 's/"//g')
+    	roomStatusCode[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].status) | sed 's/"//g')
     fi
+	# 将状态码转换为字符
+	if [ ${roomStatusCode[$i]} -eq 1 ];then
+            roomStatus[$i]="一般送电"
+    	else
+            roomStatus[$i]="一般断电"
+	fi
 done
 
-if [ ${IS_GROUP} ];then
-    msg="【电费不足提醒】与学号 ${STUDENT_ID} 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
-else
-    # 公共版 Qmsg 有违规内容检测，推送内容不支持连续数字串
-    msg="【电费不足提醒】目前与您的学号 ${STUDENT_ID:0:4}****** 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
-fi
+msg="[电费不足提醒]目前与您的学号 ${STUDENT_ID:0:4}****** 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
+
 msgFlag=0   # 是否需要推送消息标记
 for((i=0;i<$roomAmount;i++))
 do
     if [ $(printf "%.0f" ${roomOdd[$i]}) -lt ${ALERT_THRESHOLD} ];then  #判断是否低于阈值
         msgFlag=1
-        msg="$msg   【$(echo ${roomName[$i]} | sed 's/公寓/宿舍/g')】剩余${roomOdd[$i]}度电"
+        msg="$msg  [$(echo ${roomName[$i]} | sed 's/公寓/宿舍/g')]剩余${roomOdd[$i]}度电"
     fi
 done
 
@@ -52,11 +64,9 @@ while [ $msgFlag -eq 1 ] && [ "$QmsgFlag" != "true" ] && [ $i -lt 3 ]   # 若第
 do
     # echo $(echo "向与学号 ${STUDENT_ID:0:4}****** 绑定的QQ号 ${ALERT_QQ:0:3}******** 发送消息：$msg")
     echo $(echo "电费不足，正在通过 Qmsg 酱推送消息 ... ...")
-    if [ ${IS_GROUP} ];then
-        res=$(curl -sd "qq=${ALERT_QQ}&msg=$msg" "https://qmsg.zendee.cn:443/group/${QMSG_KEY}")
-    else
-        res=$(curl -sd "qq=${ALERT_QQ}&msg=$msg" "https://qmsg.zendee.cn:443/send/${QMSG_KEY}")
-    fi
+    
+    res=$(curl -sd "qq=${ALERT_QQ}&msg=$msg" "https://qmsg.zendee.cn:443/send/${QMSG_KEY}")
+    
     QmsgFlag=$(echo $res | jq .success)
     if [ "$QmsgFlag" == "true" ];then   # 输出是否推送成功日志
         echo "发送成功：$res"

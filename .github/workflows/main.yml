@@ -24,6 +24,5 @@ jobs:
           STUDENT_ID: ${{ secrets.STUDENT_ID }}
           ALERT_QQ: ${{ secrets.ALERT_QQ }}
           ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
-          IS_GROUP: ${{ vars.IS_GROUP }}
         run: |
           bash ./main.sh
