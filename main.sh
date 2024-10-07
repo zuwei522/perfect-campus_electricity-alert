@@ -7,31 +7,51 @@
 # ALERT_THRESHOLD=  # 低电量提醒阈值
 
 body=$(curl -sd "param=%7B%22cmd%22%3A%22getbindroom%22%2C%22account%22%3A%22${STUDENT_ID}%22%7D&customercode=${SCHOOL_ID}&method=getbindroom" "https://xqh5.17wanxiao.com/smartWaterAndElectricityService/SWAEServlet" | jq .body) # 从完美校园获取信息
-# 手动整理 json 格式
-body=$(echo $(echo $(echo $body | sed 's/"{/{/g') | sed 's/}"/}/g') | sed 's/\\"/"/g')
-# 新版json有变化，不再含有roomlist 明明一个人只能有一个房间，为什么要弄多个房间呢?
-roomAmount=1   # 获取绑定的房间数量
+
+body=$(echo $(echo $(echo $body | sed 's/"{/{/g') | sed 's/}"/}/g') | sed 's/\\"/"/g')  # 手动整理 json 格式
+roomAmount=$(echo $body | jq '.roomlist|length')    # 获取绑定的房间数量
+
+singleRoom=false
+# 判断是否只绑定一个宿舍
+if [[ roomAmount -eq 0 ]]; then
+    roomAmount=1
+    singleRoom=true
+fi
+
+# 直接重复操作了，不打算重写
 for((i=0;i<$roomAmount;i++))    # 依次提取 json 中的数据
 do
-    roomName[$i]=$(echo $(echo $body | jq .roomfullname) | sed 's/"//g')   # 房间名
-    roomUse[$i]=$(echo $(echo $body | jq .detaillist[0].use) | sed 's/"//g')   # 已使用电量
-    roomOdd[$i]=$(echo $(echo $body | jq .detaillist[0].odd) | sed 's/"//g')   # 剩余电量
-    roomStatusCode[$i]=$(echo $(echo $body | jq .detaillist[0].status) | sed 's/"//g') # 状态码
-    if [ ${roomStatusCode[$i]} -eq 1 ];then # 将状态码转换为字符
-        roomStatus[$i]="一般送电"
+    if [ "$singleRoom" == "true" ];then   # 处理没有roomlist的情况
+        roomName[$i]=$(echo $(echo $body | jq .roomfullname) | sed 's/"//g')   # 房间名
+    	roomUse[$i]=$(echo $(echo $body | jq .detaillist[0].use) | sed 's/"//g')   # 已使用电量
+    	roomOdd[$i]=$(echo $(echo $body | jq .detaillist[0].odd) | sed 's/"//g')   # 剩余电量
+    	roomStatusCode[$i]=$(echo $(echo $body | jq .detaillist[0].status) | sed 's/"//g') # 状态码
+    	if [ ${roomStatusCode[$i]} -eq 1 ];then # 将状态码转换为字符
+            roomStatus[$i]="一般送电"
+    	else
+            roomStatus[$i]="一般断电"
+    	fi
     else
-        roomStatus[$i]="一般断电"
+    	roomName[$i]=$(echo $(echo $body | jq .roomlist[$i].roomfullname) | sed 's/"//g')
+    	roomUse[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].use) | sed 's/"//g')
+    	roomOdd[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].odd) | sed 's/"//g')
+    	roomStatusCode[$i]=$(echo $(echo $body | jq .roomlist[$i].detaillist[0].status) | sed 's/"//g')
+    	if [ ${roomStatusCode[$i]} -eq 1 ];then
+            roomStatus[$i]="一般送电"
+    	else
+            roomStatus[$i]="一般断电"
+    	fi
     fi
 done
 
-msg="[电费不足提醒】 目前与您的学号 ${STUDENT_ID:0:4}****** 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
+msg="[电费不足提醒]目前与您的学号 ${STUDENT_ID:0:4}****** 绑定的以下房间，剩余电量不足 ${ALERT_THRESHOLD} 度，请及时缴纳电费哦~"
 
 msgFlag=0   # 是否需要推送消息标记
 for((i=0;i<$roomAmount;i++))
 do
     if [ $(printf "%.0f" ${roomOdd[$i]}) -lt ${ALERT_THRESHOLD} ];then  #判断是否低于阈值
         msgFlag=1
-        msg="$msg   【$(echo ${roomName[$i]} | sed 's/公寓/宿舍/g')】 剩余${roomOdd[$i]}度电"
+        msg="$msg  [$(echo ${roomName[$i]} | sed 's/公寓/宿舍/g')]剩余${roomOdd[$i]}度电"
     fi
 done
 
@@ -48,7 +68,7 @@ while [ $msgFlag -eq 1 ] && [ "$QmsgFlag" != "true" ] && [ $i -lt 3 ]   # 若第
 do
     # echo $(echo "向与学号 ${STUDENT_ID:0:4}****** 绑定的QQ号 ${ALERT_QQ:0:3}******** 发送消息：$msg")
     echo $(echo "电费不足，正在通过 Qmsg 酱推送消息 ... ...")
-    # 由于新版本的msg酱不会再 推送群信息 这边就把他删除了
+    
     res=$(curl -sd "qq=${ALERT_QQ}&msg=$msg" "https://qmsg.zendee.cn:443/send/${QMSG_KEY}")
     
     QmsgFlag=$(echo $res | jq .success)
