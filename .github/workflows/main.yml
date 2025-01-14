@@ -12,17 +12,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Installation dependencies
-        run: |
-          sudo apt-get update -y  
-          sudo apt-get install -y curl jq
+      - name: Install Wrangler CLI
+        run: npm install -g @cloudflare/wrangler
 
-      - name: Run main.sh
+      - name: Publish to Cloudflare Workers
         env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
           QMSG_KEY: ${{ secrets.QMSG_KEY }}
           SCHOOL_ID: ${{ secrets.SCHOOL_ID }}
           STUDENT_ID: ${{ secrets.STUDENT_ID }}
           ALERT_QQ: ${{ secrets.ALERT_QQ }}
           ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
-        run: |
-          bash ./main.sh
+        run: wrangler publish workers.js
