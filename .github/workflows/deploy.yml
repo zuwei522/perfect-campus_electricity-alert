@@ -1,0 +1,24 @@
+name: Deploy Cloudflare Worker
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 4,11 * * *"  # 世界协调时，相当于北京时间每天 12 点和 19 点各运行一次
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install create-cloudflare-cli
+        run: npm install -g create-cloudflare-cli
+
+      - name: Deploy Cloudflare Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: create-cloudflare-cli deploy

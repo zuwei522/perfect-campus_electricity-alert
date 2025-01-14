@@ -25,6 +25,48 @@
   5. 配置 Cron Triggers，设置每天 12 点和 19 点运行 Worker
   6. 保存并部署 Worker
 
+## 使用 create-cloudflare-cli 优化部署流程
+
+  1. 在 GitHub 仓库中创建一个新的 GitHub Actions workflow 文件 `.github/workflows/deploy.yml`
+  2. 在 `deploy.yml` 文件中添加以下内容：
+
+      ```yaml
+      name: Deploy Cloudflare Worker
+      on:
+        push:
+          branches:
+            - main
+        schedule:
+          - cron: "0 4,11 * * *"  # 世界协调时，相当于北京时间每天 12 点和 19 点各运行一次
+
+      jobs:
+        deploy:
+          runs-on: ubuntu-latest
+          steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install create-cloudflare-cli
+              run: npm install -g create-cloudflare-cli
+
+            - name: Deploy Cloudflare Worker
+              env:
+                CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+              run: create-cloudflare-cli deploy
+      ```
+
+  3. 在 GitHub 仓库的 `Settings` -> `Secrets and variables` -> `Actions` 中添加以下 secrets：
+
+      | Name                  | Value |
+      | --------------------- | ----- |
+      | CLOUDFLARE_API_TOKEN  | 从 Cloudflare 获取的 API Token |
+      | CLOUDFLARE_ACCOUNT_ID | 从 Cloudflare 获取的 Account ID |
+      | CLOUDFLARE_ZONE_ID    | 从 Cloudflare 获取的 Zone ID |
+
+  4. 提交并推送更改到 GitHub 仓库的 `main` 分支，GitHub Actions 将自动运行并部署 Cloudflare Worker
+
 ## 注意事项
 
   1. 完美校园的智能水电偶尔会抽风，表现为手机 APP 无法进入相关页面，同时本脚本也无法查询相关信息。
